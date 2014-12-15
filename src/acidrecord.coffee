@@ -1,4 +1,5 @@
 KeyValueRecord = require('./keyvaluerecord')
+RecordQuery = require('./recordquery')
 path = require('path')
 
 directories = {}
@@ -23,6 +24,8 @@ module.exports = (options) ->
   rootPath ?= "/acidrecord/#{database}"
   datasetPath ?= "/datasets/#{dataset}"
   
+  rootPath = rootPath.substr(1) if rootPath.indexOf('/') is 0
+  
   getDirectory = (rec, callback) ->
     if (typeof(datasetPath) is 'function')
       directoryPath = path.join(rootPath, datasetPath(rec))
@@ -34,11 +37,11 @@ module.exports = (options) ->
     if (directory)
       callback(directory)
     else
-      cb = (directory) ->
-        directories[directoryPath] = directory
-        callback(directory)
+      cb = (err, dir) ->
+        directories[directoryPath] = dir
+        callback(dir)
       
-      fdb.createOrOpen(db, directoryPath.split('/'), {}, cb)
+      fdb.directory.createOrOpen(db, directoryPath.split('/'), {}, cb)
       
     return
   
@@ -53,7 +56,7 @@ module.exports = (options) ->
       #rec.increment(tr, directory, rec)
       
       callback(null)
-  
+      
   #index: (tr, directory, rec) ->
     #for item in rec.index.items
       #if (!item.filter || item.filter(rec))
@@ -72,7 +75,7 @@ module.exports = (options) ->
           
   transactionalSave = fdb.transactional(save)
   
-  class Record extends KeyValueRecord(options)
+  class ActiveRecord extends KeyValueRecord(options)
     dataset: dataset
     
     save: (tr, callback) ->
@@ -84,7 +87,7 @@ module.exports = (options) ->
         complete = (err) =>
           futureCb(err, @)
         
-        transactionalSave(tr || @db, @, complete)
+        transactionalSave(tr || db, @, complete)
       , callback
         
     index: -> throw new Error('not implemented')
@@ -95,7 +98,13 @@ module.exports = (options) ->
       throw new Error('not implemented')
     
     @findAll = ->
-      throw new Error('not implemented')
+      options =
+        nonTransactional: true
+        snapshot: true
+        
+      @find(options)
 
-    @find = ->
-      throw new Error('not implemented')
+    @find = (options) ->
+      options.ActiveRecord = @
+      
+      new RecordQuery(options)

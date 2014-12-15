@@ -8,7 +8,7 @@ module.exports = (uniqueIdName, fields) ->
     aliases[uniqueIdName] = uniqueIdName
     aliases[src] = dest for src, dest of fields
   
-  class RecordBase extends Pseudonym(aliases)
+  class AbstractRecord extends Pseudonym(aliases)
     changed: []
     isLoaded: false
     isNew: true

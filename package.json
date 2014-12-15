@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "bson": "^0.2.11",
-    "fdb": "^3.0.3",
     "fdboost": "*",
     "formality": "*",
     "surreal": "^0.1.0",

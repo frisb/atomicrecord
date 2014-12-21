@@ -1,12 +1,19 @@
 Pseudonym = require('pseudonym')
 
-module.exports = (uniqueIdName, fields) ->
-  if (fields instanceof Array)
-    aliases = [uniqueIdName].concat(fields)
+###*
+ * Create an AbstractRecord class 
+ * @method
+ * @param {string} uniqueIdName First key in the query range.
+ * @param {(string[]|object)} options.valueFields Last key in the query range.
+ * @return {AbstractRecord} an AbstractRecord class
+###    
+module.exports = (uniqueIdName, valueFields) ->
+  if (valueFields instanceof Array)
+    aliases = [uniqueIdName].concat(valueFields)
   else
     aliases = Object.create(null)
     aliases[uniqueIdName] = uniqueIdName
-    aliases[src] = dest for src, dest of fields
+    aliases[src] = dest for src, dest of valueFields
   
   class AbstractRecord extends Pseudonym(aliases)
     changed: []

@@ -4,22 +4,20 @@ fdb = FDBoost.fdb
 
 module.exports = class UniKeySerializer extends AbstractSerializer
   encode: (directory, record) ->
-    keyArr = @ActiveRecordPrototype.keyResolver.resolve(record)
+    keySuffix = []
     valArr = []
     
-    for i in [0...record.aliasMap.destKeys.length - 1]
-      index = i + 1
-      
-      srcKey = record.aliasMap.srcKeys[index]
-      
-      if (!@ActiveRecordPrototype.fieldExclusions[srcKey])
-        val = record.__d[index]
+    for i in [0...record.aliasMap.destKeys.length]
+      srcKey = record.aliasMap.srcKeys[i]
+    
+      if (!@primaryKey.fields[srcKey])
+        val = record.__d[i]
         
         if (typeof(val) isnt 'undefined')
-          keyArr.push(record.aliasMap.destKeys[index])
+          keySuffix.push(record.aliasMap.destKeys[i])
           valArr.push(FDBoost.encoding.encode(val))
-        
-    encodedKey = directory.pack(keyArr)
+
+    encodedKey = @primaryKey.encoder.encodeKey(directory, record, keySuffix)
     encodedValue = fdb.tuple.pack(valArr)
     
     record.keySize = encodedKey.length
@@ -28,23 +26,21 @@ module.exports = class UniKeySerializer extends AbstractSerializer
     
     [[encodedKey, encodedValue]]
       
-  decode: (foundationDBValue) ->
-    record = null
-    id = @key[0]
+  decode: (directory, keyValuePair) ->
+    pk = @primaryKey.encoder.decodeKey(directory, keyValuePair.key)
+    record = new @ActiveRecordPrototype(pk)
     
-    record = new @ActiveRecordPrototype() 
-    record.id = @key[1].toString('hex')
-    record.timestamp = @key[0]
-    
-    map = new Array(@key.length - 1)
-    values = fdb.tuple.unpack(foundationDBValue)
-    
-    for i in [1...@key.length]
+    values = fdb.tuple.unpack(keyValuePair.value)
+
+    keyLen = @key.length
+    modelLen = @primaryKey.keyFields.length
+
+    for i in [modelLen...keyLen]
       dest = @key[i]
-      record.data(dest, values[i - 1]) 
+      record.data(dest, values[i - modelLen]) 
     
     record.reset(true)
     
-    console.log('decoded', record.toDocument(true))
-    
+    @state.push(record)
+
     record

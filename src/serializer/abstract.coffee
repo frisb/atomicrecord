@@ -1,18 +1,19 @@
 module.exports = class AbstractSerializer
-  assembled: []
-  currentRecord: null
-  key: null
-
   constructor: (@ActiveRecordPrototype) ->
+    @primaryKey = @ActiveRecordPrototype.primaryKey
+
+  state: []
+  cursor: null
+  key: null
 
   serialize: (record, callback) ->
     complete = (directory) =>
       process.nextTick =>
         callback(@encode(directory, record))
-          
-      return
-          
-    record.resolveDirectory(complete)
+
+        return    
+
+    @primaryKey.resolver.resolveDirectory(record, complete)
   
   encode: (directory, record) ->
     throw new Error('not implemented')
@@ -23,15 +24,15 @@ module.exports = class AbstractSerializer
     process.nextTick =>
       for kv in keyValuePairs
         @key = directory.unpack(kv.key)
-        @currentRecord = @decode(kv.value)
-        @currentRecord.keySize += kv.key.length
-        @currentRecord.valueSize += kv.value.length
-        
-      if (@assembled.length > 0)
-        callback(@assembled)
-        @assembled = [] 
+        @cursor = @decode(directory, kv)
+        @cursor.keySize += kv.key.length
+        @cursor.valueSize += kv.value.length
+
+      if (@state.length > 0)
+        callback(@state)
+        @state = [] 
   
-  decode: (foundationDBValue) ->
+  decode: (directory, buffer) ->
     throw new Error('not implemented')
     
   

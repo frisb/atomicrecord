@@ -2,19 +2,16 @@ FDBoost = require('fdboost')()
 fdb = FDBoost.fdb
 
 module.exports = (query, options = {}) ->
-  ActiveRecordPrototype = @
+  pkResolver = @primaryKey.resolver
+  serializer = @serializer
   
   class Finder extends FDBoost.range.Reader
-    assembled: []
-    currentRecord: null
-    key: null
-      
     finalize: (err, callback) ->
-      if (@assembled.length > 0)
-        @emit('data', @assembled)
-      else if (@currentRecord isnt null)
-        @currentRecord.reset(true)
-        @emit('data', @currentRecord)
+      if (serializer.state.length > 0)
+        @emit('data', serializer.state)
+      else if (serializer.cursor isnt null)
+        serializer.cursor.reset(true)
+        @emit('data', serializer.cursor)
         
       callback(err)
   
@@ -25,11 +22,14 @@ module.exports = (query, options = {}) ->
      * @param {iterateCallback} callback Callback.
      * @fires RangeReader#data
      * @return {undefined}
-    ###     
+    ### 
     toArray: (iterator, callback) ->
       iterator.toArray (err, arr) =>
-        ActiveRecordPrototype.deserialize(@directory, arr, )
-        @finalize(err, callback)
+        cb = (records) =>
+          @finalize(err, callback)
+
+        serializer.deserialize(@directory, arr, cb)
+        
         return
     
     ###*
@@ -85,6 +85,6 @@ module.exports = (query, options = {}) ->
         @begin = @directory
         super(tr, iteratorType)
       
-      ActiveRecordPrototype.directoryResolver.resolve(query, callback)
+      pkResolver.resolveDirectory(query, callback)
       
   new Finder(options)

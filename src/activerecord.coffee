@@ -1,9 +1,4 @@
-{ObjectID} = require('bson')
 AbstractRecord = require('./abstractrecord')
-
-DirectoryResolver = require('./resolvers/directory')
-KeyResolver = require('./resolvers/key')
-
 SerializerFactory = require('./serializer/factory')
 
 #_INCREMENTAL = new Buffer(4)
@@ -12,11 +7,8 @@ SerializerFactory = require('./serializer/factory')
 module.exports = (options) ->
   throw new Error('No AcidRecord options specified.') unless options
   
-  {fdb, database, dataset, idName, pkFactory, partition, keyFields, valueFields} = options
-  
-  idName ?= 'id'
-  pkFactory ?= -> new Buffer(new ObjectID().toHexString(), 'hex')
-  
+  {fdb, database, dataset, partition, keyFields, valueFields, primarykey} = options
+
   throw new Error('Database name not specified.') unless database
   throw new Error('Dataset name not specified.') unless dataset
   
@@ -24,17 +16,10 @@ module.exports = (options) ->
   fdb = FDBoost.fdb
   db = FDBoost.db
   
-  #KeyResolver = require('./keyresolver')
-  
-  directoryResolver = new DirectoryResolver(options)
-  keyResolver = new KeyResolver(idName, keyFields)
-  
-  fieldExclusions = {}
-  fieldExclusions[field] = 1 for field in directoryResolver.fields
-  fieldExclusions[field] = 1 for field in keyResolver.fields
-  
+  PrimaryKey = require('./primarykey')
+  primaryKey = new PrimaryKey(database, dataset, primarykey)
+
   serializer = null
-  
   getSerializer = (ActiveRecordPrototype) ->
     if (serializer is null)
       serializerFactory = new SerializerFactory(ActiveRecordPrototype)
@@ -72,24 +57,9 @@ module.exports = (options) ->
           
   transactionalSave = fdb.transactional(save)
   
-  class ActiveRecord extends AbstractRecord(idName, valueFields)
-    @directoryResolver = directoryResolver
-    @keyResolver = keyResolver
-    @fieldExclusions = fieldExclusions
   
-    @Finder = require('./finder')
-    
-    @deserialize = (directory, keyValuePairs, callback) ->
-      getSerializer(@).deserialize(directory, keyValuePairs, callback)
-  
-    @transactional = (func) -> fdb.transactional(func)
-    @doTransaction = (transaction, callback) -> db.doTransaction(transaction, callback)
-    #@resolveDirectory = (query, callback) -> directoryResolver.resolve(query, callback)
-  
-    keySize: 0
-    valueSize: 0
-    partition: partition
-    
+
+  class ActiveRecord extends AbstractRecord(primaryKey.idName, valueFields)
     ###*
      * Creates a new Record instance
      * @class
@@ -100,22 +70,27 @@ module.exports = (options) ->
       super()
       
       @setValue(src, val) for src, val of record if record
-      @[idName] = pkFactory() unless (record && record[idName])
-      
+
+      idName = primaryKey.idName
+      @[primaryKey.idName] = primaryKey.factory.generateId() unless (record && record[primaryKey.idName])
+
+      # no id if record not null
+    
+    keySize: 0
+    valueSize: 0
+    partition: partition
+
     data: (dest, val) ->
       if (dest && typeof(val) is 'undefined')
         val = super(dest)
         
-        if (dest isnt idName && val instanceof Buffer)
+        if (dest isnt primaryKey.idName && val instanceof Buffer)
           val = FDBoost.encoding.decode(val)
           @data(dest, val)
           
         return val
         
       return super(dest, val)
-      
-    resolveDirectory: (callback) ->
-      directoryResolver.resolve(@, callback)
       
     save: (tr, callback) ->
       if (typeof(tr) is 'function')
@@ -136,6 +111,16 @@ module.exports = (options) ->
     #add: -> throw new Error('not implemented')
       
     # static methods
+    @finder = require('./finder')
+    @primaryKey = primaryKey
+    @serializer = getSerializer(@)
+
+    @transactional = (func) -> 
+      fdb.transactional(func)
+
+    @doTransaction = (transaction, callback) -> 
+      db.doTransaction(transaction, callback)
+
     @count = ->
       throw new Error('not implemented')
     

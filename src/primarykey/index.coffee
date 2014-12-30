@@ -1,12 +1,18 @@
 path = require('path')
 
+
+
 module.exports = class PrimaryKey
 	constructor: (@database, @dataset, options = {}) ->	
 		{encoder, factory, resolver} = options
 
-		PrimaryKey.Encoder::[fnName] = fn for fnName, fn of encoder if encoder
-		PrimaryKey.Factory::[fnName] = fn for fnName, fn of factory if factory
-		PrimaryKey.Resolver::[fnName] = fn for fnName, fn of resolver if resolver
+		for prop, val of options
+			switch prop
+				when 'encoder', 'factory', 'resolver'
+					className = prop[0].toUppercase()
+					PrimaryKey[className]::[fnName] = fn for fnName, fn of val
+				else
+					PrimaryKey::[prop] = val 
 
 		@encoder = new PrimaryKey.Encoder(@)
 		@factory = new PrimaryKey.Factory(@)

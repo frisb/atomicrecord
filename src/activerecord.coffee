@@ -7,7 +7,7 @@ SerializerFactory = require('./serializer/factory')
 module.exports = (options) ->
   throw new Error('No AcidRecord options specified.') unless options
   
-  {fdb, database, dataset, partition, keyFields, valueFields, primarykey} = options
+  {fdb, database, dataset, partition, fields, primaryKey} = options
 
   throw new Error('Database name not specified.') unless database
   throw new Error('Dataset name not specified.') unless dataset
@@ -15,9 +15,9 @@ module.exports = (options) ->
   FDBoost = require('fdboost')(fdb)
   fdb = FDBoost.fdb
   db = FDBoost.db
-  
+
   PrimaryKey = require('./primarykey')
-  primaryKey = new PrimaryKey(database, dataset, primarykey)
+  primaryKey = new PrimaryKey(database, dataset, primaryKey)
 
   serializer = null
   getSerializer = (ActiveRecordPrototype) ->
@@ -59,7 +59,7 @@ module.exports = (options) ->
   
   
 
-  class ActiveRecord extends AbstractRecord(primaryKey.idName, valueFields)
+  class ActiveRecord extends AbstractRecord(primaryKey.idName, fields)
     ###*
      * Creates a new Record instance
      * @class
@@ -91,7 +91,13 @@ module.exports = (options) ->
         return val
         
       return super(dest, val)
-      
+     
+    getValue: (src) ->
+      val = super(src)
+      val = primaryKey.factory.deserializeId(val) if src is primaryKey.idName
+      val
+        
+
     save: (tr, callback) ->
       if (typeof(tr) is 'function')
         callback = tr

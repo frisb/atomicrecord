@@ -2,48 +2,55 @@ AbstractSerializer = require('./abstract')
 FDBoost = require('fdboost')()
 fdb = FDBoost.fdb
 
+areEqual = (recordVal, keyVal) ->
+  return false if recordVal.length isnt keyVal.length
+
+  for i in [0...recordVal.length]
+    return false if recordVal[i] isnt keyVal[i]
+
+  return true
+
 module.exports = class MultiKeySerializer extends AbstractSerializer
   encode: (directory, record) ->
     keyValues = []
           
-    for i in [0...@aliasMap.destKeys.length - 1]
-      index = i + 1
+    for i in [0...record.aliasMap.destKeys.length]
+      srcKey = record.aliasMap.srcKeys[i]
       
-      srcKey = @aliasMap.srcKeys[index]
-      
-      if (!fieldExclusions[srcKey])
-        val = @__d[index]
+      if (!@primaryKey.fields[srcKey])
+        val = record.__d[i]
         
         if (typeof(val) isnt 'undefined')
-          destKey = @aliasMap.destKeys[index]
-          
-          keyArr = @ActiveRecordPrototype.keyResolver.resolve(@, [destKey])
-          
-          encodedKey = directory.pack(keyArr)
+          destKey = record.aliasMap.destKeys[i]
+          keySuffix = [destKey]
+
+          encodedKey = @primaryKey.encoder.encodeKey(directory, record, keySuffix)
           encodedValue = FDBoost.encoding.encode(val)
           
           keyValues.push([encodedKey, encodedValue])
-        
+
     keyValues
       
-  decode: (foundationDBValue) ->
-    record = null
-    id = @key[0]
-    dest = @key[1]
-    
-    if (@currentRecord isnt null)
-      record = @currentRecord
+  decode: (directory, keyValuePair) ->
+    pk = @primaryKey.encoder.decodeKey(directory, keyValuePair.key)
 
-      if (@currentRecord.id isnt id)
-        @currentRecord.reset(true)
-        @assembled.push(record)
+    dest = @key[@primaryKey.keyFields.length]
 
-        # create new ActiveRecord instance
-        record = new @ActiveRecordPrototype(id)
+    if (@cursor isnt null)
+      record = @cursor
+
+      for field, i in @primaryKey.keyFields
+        if (!areEqual(@cursor.data(field), @key[i]))
+          @cursor.reset(true)
+          @state.push(record)
+
+          # create new ActiveRecord instance
+          record = new @ActiveRecordPrototype(pk)
+          break
     else
       # create new ActiveRecord instance
-      record = new @ActiveRecordPrototype(id)
+      record = new @ActiveRecordPrototype(pk)
       
-    record.data(dest, value) if (dest)
+    record.data(dest, keyValuePair.value)
     
     record

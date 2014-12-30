@@ -5,3 +5,6 @@ module.exports = class Factory
 
 	generateId: (record) -> 
 		new Buffer(new ObjectID().toHexString(), 'hex')
+		
+	deserializeId: (buffer) ->
+		buffer.toString('hex')

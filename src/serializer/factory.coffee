@@ -1,10 +1,16 @@
 MultiKeySerializer = require('./multikey')
 UniKeySerializer = require('./unikey')
 
-module.exports = class SerializerFactory
-	constructor: (ActiveRecordPrototype) ->
-		@multi = new MultiKeySerializer(ActiveRecordPrototype)
-		@uni = new UniKeySerializer(ActiveRecordPrototype)
+serializers = {}
 
-	get: (partition) ->
-	  if partition then @multi else @uni
+module.exports = 
+	create: (ActiveRecord) ->
+		key = "#{ActiveRecord::database}:#{ActiveRecord::dataset}"
+		serializer = serializers[key]
+
+		if (!serializer)
+			serializers[key] = serializer = 
+				multi: new MultiKeySerializer(ActiveRecord)
+				uni: new UniKeySerializer(ActiveRecord)
+
+		if ActiveRecord.partition then serializer.multi else serializer.uni

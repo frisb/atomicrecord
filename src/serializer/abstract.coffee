@@ -1,36 +1,44 @@
+FDBoost = require('fdboost')()
+fdb = FDBoost.fdb
+
 module.exports = class AbstractSerializer
-  constructor: (@ActiveRecordPrototype) ->
-    @primaryKey = @ActiveRecordPrototype.primaryKey
+  constructor: (@ActiveRecord) ->
+    @keyFrag = @ActiveRecord.keyFrag
 
   state: []
   cursor: null
   key: null
 
   serialize: (record, callback) ->
-    complete = (directory) =>
-      process.nextTick =>
-        callback(@encode(directory, record))
+    fdb.future.create (futureCb) =>
+      complete = (directory) =>
+        process.nextTick =>
+          futureCb(@encode(directory, record))
+          return 
+        return   
 
-        return    
+      @keyFrag.resolveDirectory(record, complete)
+    , callback
 
-    @primaryKey.resolver.resolveDirectory(record, complete)
-  
   encode: (directory, record) ->
     throw new Error('not implemented')
       
   deserialize: (directory, keyValuePairs, callback) ->
-    keyValuePairs = [keyValuePairs] unless keyValuePairs instanceof Array
-    
-    process.nextTick =>
-      for kv in keyValuePairs
-        @key = directory.unpack(kv.key)
-        @cursor = @decode(directory, kv)
-        @cursor.keySize += kv.key.length
-        @cursor.valueSize += kv.value.length
+    fdb.future.create (futureCb) =>
+      keyValuePairs = [keyValuePairs] unless keyValuePairs instanceof Array
+      
+      process.nextTick =>
+        for kv in keyValuePairs
+          @key = directory.unpack(kv.key)
+          @cursor = @decode(directory, kv)
+          @cursor.keySize += kv.key.length
+          @cursor.valueSize += kv.value.length
 
-      if (@state.length > 0)
-        callback(@state)
-        @state = [] 
+        if (@state.length > 0)
+          futureCb(@state)
+          @state = []
+    , callback
+
   
   decode: (directory, buffer) ->
     throw new Error('not implemented')

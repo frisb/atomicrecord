@@ -1,9 +1,20 @@
 AbstractRecord = require('./abstractrecord')
-SerializerFactory = require('./serializer/factory')
 
 #_INCREMENTAL = new Buffer(4)
 #_INCREMENTAL.writeUInt32LE(1, 0)
 
+###*
+ * Create an ActiveRecord class 
+ * @method
+ * @param {object} options ActiveRecord type specific options.
+ * @param {object} [options.fdb=undefined] fdb API instance.
+ * @param {string} options.database Database name.
+ * @param {string} options.dataset Data collection name.
+ * @param {Boolean} options.partition Flag if ActiveRecord type instance storage is partitioned.
+ * @param {string[]|object} options.fields AliasMap initializer.
+ * @param {object} [options.primaryKey] Override methods for keyfrag Primary Key generator.
+ * @return {ActiveRecord} an ActiveRecord class
+###    
 module.exports = (options) ->
   throw new Error('No AcidRecord options specified.') unless options
   
@@ -16,16 +27,10 @@ module.exports = (options) ->
   fdb = FDBoost.fdb
   db = FDBoost.db
 
-  PrimaryKey = require('./primarykey')
-  primaryKey = new PrimaryKey(database, dataset, primaryKey)
+  KeyFrag = require('./keyfrag')
+  SerializerFactory = require('./serializer/factory')
 
-  serializer = null
-  getSerializer = (ActiveRecordPrototype) ->
-    if (serializer is null)
-      serializerFactory = new SerializerFactory(ActiveRecordPrototype)
-      serializer = serializerFactory.get(partition) 
-      
-    serializer
+  keyFrag = new KeyFrag(database, dataset, primaryKey)
     
   save = (tr, record, callback) ->
     cb = (arr) ->
@@ -56,48 +61,75 @@ module.exports = (options) ->
         #tr.add(packedKey, _INCREMENTAL)
           
   transactionalSave = fdb.transactional(save)
-  
-  
 
-  class ActiveRecord extends AbstractRecord(primaryKey.idName, fields)
+  class ActiveRecord extends AbstractRecord(keyFrag.idName, fields)
     ###*
-     * Creates a new Record instance
+     * Creates a new typed ActiveRecord instance
      * @class
-     * @param {object} record Record object initializer.
-     * @return {Record} a Record instance.
+     * @param {object} [record] Record object initializer.
+     * @return {Record} a typed ActiveRecord instance.
     ###
     constructor: (record) ->
       super()
       
       @setValue(src, val) for src, val of record if record
 
-      idName = primaryKey.idName
-      @[primaryKey.idName] = primaryKey.factory.generateId() unless (record && record[primaryKey.idName])
-
-      # no id if record not null
+      ### generate an Id if record param is undefined or if it does not have a [keyFrag.idName] property value ###
+      @[keyFrag.idName] = keyFrag.generateId() unless (record && record[keyFrag.idName])
     
+    ### Initializers ###
+    database: database
+    dataset: dataset
     keySize: 0
     valueSize: 0
     partition: partition
 
+    ###*
+     * Get / Set internal value for property alias.
+     * @virtual
+     * @param {string} dest Destination property alias.
+     * @param {object} val Optional value to set.
+     * @return {object} Value if val undefined.
+    ###  
     data: (dest, val) ->
       if (dest && typeof(val) is 'undefined')
         val = super(dest)
         
-        if (dest isnt primaryKey.idName && val instanceof Buffer)
+        ### Decode the value if the dest param is not equal to keyFrag.idName and the type of val is Buffer ###
+        if (dest isnt keyFrag.idName && val instanceof Buffer)
           val = FDBoost.encoding.decode(val)
           @data(dest, val)
           
         return val
         
       return super(dest, val)
-     
+    ###*
+     * Get value for property name.
+     * @virtual
+     * @param {string} src Source property name.
+     * @return {object} Value.
+    ###   
     getValue: (src) ->
       val = super(src)
-      val = primaryKey.factory.deserializeId(val) if src is primaryKey.idName
-      val
-        
 
+      ### Deserialize the internal value using the unique identifier serlializer if the src param name is equal to keyFrag.idName ###
+      val = keyFrag.deserializeId(val) if src is keyFrag.idName
+      val
+
+    ###*
+     * The callback format for the save method
+     * @callback saveCallback
+     * @param {Error} err An error instance representing the error during the execution.
+     * @param {ActiveRecord} record The current ActiveRecord instance if the save method was successful.
+    ###
+
+    ###*
+     * Persists all property changes to the database
+     * @method
+     * @param {object} [tr=null] Transaction.
+     * @param {saveCallback} callback Calback.
+     * @return {Future}
+    ###
     save: (tr, callback) ->
       if (typeof(tr) is 'function')
         callback = tr
@@ -109,17 +141,18 @@ module.exports = (options) ->
         
         transactionalSave(tr || db, @, complete)
       , callback
-    
+
     serialize: (callback) ->
-      getSerializer(ActiveRecord).serialize(@, callback)
-        
-    #index: -> throw new Error('not implemented')
-    #add: -> throw new Error('not implemented')
-      
-    # static methods
-    @finder = require('./finder')
-    @primaryKey = primaryKey
-    @serializer = getSerializer(@)
+      ActiveRecord.serializer.serialize(@, callback)
+
+    ### Define getters and setters ###
+    Object.defineProperties @::,
+      keyValueSize: 
+        get: -> @keySize + @valueSize
+
+    ### Static properties and methods ###
+    @keyFrag = keyFrag
+    @serializer = SerializerFactory.create(@)
 
     @transactional = (func) -> 
       fdb.transactional(func)
@@ -137,7 +170,3 @@ module.exports = (options) ->
       @find(query, options)
 
     @find = require('./finder')
-      
-    Object.defineProperties @::,
-      keyValueSize: 
-        get: -> @keySize + @valueSize

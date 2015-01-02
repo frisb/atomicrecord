@@ -14,13 +14,6 @@ module.exports = class Encoder
     for i in [0...@primaryKey.keyFields.length]
       val = arr[i]
       val = FDBoost.encoding.decode(val) unless i is @primaryKey.keyFields.length - 1
-
-      # if (i is @primaryKey.keyFields.length - 1)
-      #   # id
-      #   val = @primaryKey.factory.deserializeId(val)
-      # else
-      #   val = FDBoost.encoding.decode(val) 
-
       obj[@primaryKey.keyFields[i]] = val
 
     obj

@@ -9,11 +9,11 @@ module.exports = class UniKeySerializer extends AbstractSerializer
     for destKey, i in record.aliasMap.destKeys
       srcKey = record.aliasMap.srcKeys[i]
 
-      if (!@primaryKey.fields[srcKey])
+      if (!@keyFrag.fields[srcKey])
         val = record.__d[i]
         valArr.push(destKey, FDBoost.encoding.encode(val)) if typeof val isnt 'undefined'
 
-    encodedKey = @primaryKey.encoder.encodeKey(directory, record)
+    encodedKey = @keyFrag.encodeKey(directory, record)
     encodedValue = fdb.tuple.pack(valArr)
     
     record.keySize = encodedKey.length
@@ -23,8 +23,8 @@ module.exports = class UniKeySerializer extends AbstractSerializer
     [[encodedKey, encodedValue]]
 
   decode: (directory, keyValuePair) ->
-    pk = @primaryKey.encoder.decodeKey(directory, keyValuePair.key)
-    record = new @ActiveRecordPrototype(pk)
+    primaryKey = @keyFrag.decodeKey(directory, keyValuePair.key)
+    record = new @ActiveRecord(primaryKey)
     
     values = fdb.tuple.unpack(keyValuePair.value)
     record.data(field, values[i + 1])  for field, i in values

@@ -3,42 +3,58 @@ Pseudonym = require('pseudonym')
 ###*
  * Create an AbstractRecord class 
  * @method
- * @param {string} idName First key in the query range.
- * @param {(string[]|object)} options.valueFields Last key in the query range.
+ * @param {string} idName Record instance unique identifier name.
+ * @param {string[]|object} fields AliasMap initializer.
  * @return {AbstractRecord} an AbstractRecord class
 ###    
-module.exports = (idName, valueFields) ->
-  if (valueFields instanceof Array)
-    aliases = [idName].concat(valueFields)
+module.exports = (idName, fields) ->
+  if (fields instanceof Array)
+    aliases = [idName].concat(fields)
   else
     aliases = Object.create(null)
     aliases[idName] = idName
-    aliases[src] = dest for src, dest of valueFields
+    aliases[src] = dest for src, dest of fields
   
   class AbstractRecord extends Pseudonym(aliases)
     changed: []
     isLoaded: false
     isNew: true
     
+    ###*
+     * Creates a new AbstractRecord instance 
+     * @class
+     * @return {AbstractRecord} an AbstractRecord instance
+    ###
     constructor: ->
       # create pseudonym data containers
       super()
-      
+    
+    ###*
+     * Resets the record instance state
+     * @param {Boolean} isLoaded Flag if instance has had data loaded from store.
+     * @return {undefined}
+    ###
     reset: (isLoaded) ->
       @isLoaded = isLoaded
       @isNew = !isLoaded
       @changed = []
       return
 
-    setValue: (key, val) ->
-      dest = super(key, val)
+    ###*
+     * Overrides the Pseudonym prototype setValue method
+     * @virtual
+     * @param {string} src Source property name.
+     * @param {object} val Value to set.
+     * @return {string} Property alias.
+    ###
+    setValue: (src, val) ->
+      dest = super(src, val)
       
-      for field in @changed 
-        return if field is key
-        
-      @changed.push(key)
+      return if field is src for field in @changed
+
+      @changed.push(src)
       @isNew = false
-      return
+      dest
       
     Object.defineProperty @::, 'isChanged',
       get: -> @changed.length > 0

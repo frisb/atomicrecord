@@ -17,14 +17,14 @@ module.exports = class MultiKeySerializer extends AbstractSerializer
     for i in [0...record.aliasMap.destKeys.length]
       srcKey = record.aliasMap.srcKeys[i]
       
-      if (!@primaryKey.fields[srcKey])
+      if (!@keyFrag.fields[srcKey])
         val = record.__d[i]
         
         if (typeof(val) isnt 'undefined')
           destKey = record.aliasMap.destKeys[i]
           keySuffix = [destKey]
 
-          encodedKey = @primaryKey.encoder.encodeKey(directory, record, keySuffix)
+          encodedKey = @keyFrag.encodeKey(directory, record, keySuffix)
           encodedValue = FDBoost.encoding.encode(val)
           
           keyValues.push([encodedKey, encodedValue])
@@ -32,24 +32,24 @@ module.exports = class MultiKeySerializer extends AbstractSerializer
     keyValues
       
   decode: (directory, keyValuePair) ->
-    pk = @primaryKey.encoder.decodeKey(directory, keyValuePair.key)
+    primaryKey = @keyFrag.decodeKey(directory, keyValuePair.key)
 
-    dest = @key[@primaryKey.keyFields.length]
+    dest = @key[@keyFrag.keyFields.length]
 
     if (@cursor isnt null)
       record = @cursor
 
-      for field, i in @primaryKey.keyFields
+      for field, i in @keyFrag.keyFields
         if (!areEqual(@cursor.data(field), @key[i]))
           @cursor.reset(true)
           @state.push(record)
 
           # create new ActiveRecord instance
-          record = new @ActiveRecordPrototype(pk)
+          record = new @ActiveRecord(primaryKey)
           break
     else
       # create new ActiveRecord instance
-      record = new @ActiveRecordPrototype(pk)
+      record = new @ActiveRecord(primaryKey)
       
     record.data(dest, keyValuePair.value)
     

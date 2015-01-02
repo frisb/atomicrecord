@@ -2,7 +2,7 @@ FDBoost = require('fdboost')()
 fdb = FDBoost.fdb
 
 module.exports = (query, options = {}) ->
-  pkResolver = @primaryKey.resolver
+  keyFrag = @keyFrag
   serializer = @serializer
   
   class Finder extends FDBoost.range.Reader
@@ -85,6 +85,6 @@ module.exports = (query, options = {}) ->
         @begin = @directory
         super(tr, iteratorType)
       
-      pkResolver.resolveDirectory(query, callback)
+      keyFrag.resolveDirectory(query, callback)
       
   new Finder(options)

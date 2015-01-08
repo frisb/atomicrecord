@@ -95,7 +95,7 @@ module.exports = (options) ->
             @[src] = val
 
       ### generate an Id if record param is undefined or if it does not have a [keyFrag.idName] property value ###
-      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName])
+      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName]
     
     ### Initializers ###
     database: database

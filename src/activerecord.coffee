@@ -87,10 +87,15 @@ module.exports = (options) ->
     constructor: (record) ->
       super()
       
-      @setValue(src, val) for src, val of record if record
+      if (record)
+        for src, val of record
+          if (src is keyFrag.idName)
+            @[src] = keyFrag.serializeId(val)
+          else
+            @[src] = val
 
       ### generate an Id if record param is undefined or if it does not have a [keyFrag.idName] property value ###
-      @[keyFrag.idName] = keyFrag.generateId() unless (record && record[keyFrag.idName])
+      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName])
     
     ### Initializers ###
     database: database

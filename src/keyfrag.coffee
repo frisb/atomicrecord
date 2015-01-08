@@ -41,8 +41,11 @@ module.exports = class KeyFrag
 	getIdName: -> 
 		'id'
 
-	generateId: (record) -> 
-		new Buffer(new ObjectID().toHexString(), 'hex')
+	generateId: -> 
+		@serializeId(new ObjectID().toHexString())
+
+	serializeId: (hexStr) ->
+		new Buffer(hexStr, 'hex')
 
 	deserializeId: (buffer) ->
 		buffer.toString('hex')

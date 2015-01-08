@@ -81,10 +81,12 @@ module.exports = (query, options = {}) ->
      * @return {undefined}
     ###        
     execute: (tr, iteratorType) ->
-      callback = (@directory) =>
+      callback = (err, @directory) =>
+        throw new Error(err) if err
+        
         @begin = @directory
         super(tr, iteratorType)
-      
+
       keyFrag.resolveDirectory(query, callback)
       
   new Finder(options)

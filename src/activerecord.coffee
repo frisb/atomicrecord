@@ -18,7 +18,7 @@ AbstractRecord = require('./abstractrecord')
 module.exports = (options) ->
   throw new Error('No AcidRecord options specified.') unless options
   
-  {fdb, database, dataset, partition, fields, primaryKey} = options
+  {fdb, database, dataset, partition, fields, primaryKey, indexes} = options
 
   throw new Error('Database name not specified.') unless database
   throw new Error('Dataset name not specified.') unless dataset
@@ -27,31 +27,45 @@ module.exports = (options) ->
   fdb = FDBoost.fdb
   db = FDBoost.db
 
+  ActiveIndex = require('./activeindex')
   KeyFrag = require('./keyfrag')
   SerializerFactory = require('./serializer/factory')
 
   keyFrag = new KeyFrag(database, dataset, primaryKey)
-    
+
+  activeIndexes = 
+    names: []
+
+  for indexName, index of indexes
+    Index = ActiveIndex(indexName, index)
+    activeIndexes[indexName] = new Index()
+    activeIndexes.names.push(indexName)
+
   save = (tr, record, callback) ->
-    cb = (arr) ->
-      tr.set(kv[0], kv[1]) for kv in arr
-      record.reset(true)
-      
-      #rec.index(tr, directory, rec)
-      #rec.increment(tr, directory, rec)
-      
-      callback(null)
+    cb = (err, arr) ->
+      if (err)
+        callback(err)
+      else
+        tr.set(kv[0], kv[1]) for kv in arr
+        record.reset(true)
+        
+        record.index(tr, callback)
+        #rec.increment(tr, directory, rec)
+        
+        # callback(null)
     
     record.serialize(cb)
-      
-  #index: (tr, directory, rec) ->
-    #for item in rec.index.items
-      #if (!item.filter || item.filter(rec))
-        ## no filter or successfully filtered
-        #directory = rec.provider.dir[mechanism][item.name]
-        #packedKey = directory.pack(KeyResolver.resolve(rec, item.key))
-        #tr.set(packedKey, '')
-        #
+  
+  index = (tr, record, callback) ->
+    cb = (err, directory) ->
+      if (err)
+        callback(err)
+      else
+        activeIndexes[indexName].execute(tr, directory, record) for indexName in activeIndexes.names
+        callback(null)
+
+    keyFrag.resolveDirectory(record, cb)
+
   #increment: (tr, directory, callback) ->
     #for item in rec.index.items
       #if (!item.filter || item.filter(rec))
@@ -61,6 +75,7 @@ module.exports = (options) ->
         #tr.add(packedKey, _INCREMENTAL)
           
   transactionalSave = fdb.transactional(save)
+  transactionalIndex = fdb.transactional(index)
 
   class ActiveRecord extends AbstractRecord(keyFrag.idName, fields)
     ###*
@@ -84,6 +99,9 @@ module.exports = (options) ->
     valueSize: 0
     partition: partition
 
+    _key: null
+    _keyValueSize: null
+
     ###*
      * Get / Set internal value for property alias.
      * @virtual
@@ -103,18 +121,19 @@ module.exports = (options) ->
         return val
         
       return super(dest, val)
-    ###*
-     * Get value for property name.
-     * @virtual
-     * @param {string} src Source property name.
-     * @return {object} Value.
-    ###   
-    getValue: (src) ->
-      val = super(src)
 
-      ### Deserialize the internal value using the unique identifier serlializer if the src param name is equal to keyFrag.idName ###
-      val = keyFrag.deserializeId(val) if src is keyFrag.idName
-      val
+    # ###*
+    #  * Get value for property name.
+    #  * @virtual
+    #  * @param {string} src Source property name.
+    #  * @return {object} Value.
+    # ###   
+    # getValue: (src) ->
+    #   val = super(src)
+
+    #   ### Deserialize the internal value using the unique identifier serlializer if the src param name is equal to keyFrag.idName ###
+    #   val = keyFrag.deserializeId(val) if src is keyFrag.idName
+    #   val
 
     ###*
      * The callback format for the save method
@@ -142,13 +161,34 @@ module.exports = (options) ->
         transactionalSave(tr || db, @, complete)
       , callback
 
+    index: (tr, callback) ->
+      if (typeof(tr) is 'function')
+        callback = tr
+        tr = null
+        
+      fdb.future.create (futureCb) =>
+        complete = (err) =>
+          futureCb(err, @)
+        
+        transactionalIndex(tr || db, @, complete)
+      , callback
+
     serialize: (callback) ->
       ActiveRecord.serializer.serialize(@, callback)
 
     ### Define getters and setters ###
     Object.defineProperties @::,
+      key: 
+        get: ->
+          @_key = keyFrag.resolveKey(@) if @_key is null || @isChanged
+          @_key
+        set: (val) ->
+          @_key = val
+
       keyValueSize: 
-        get: -> @keySize + @valueSize
+        get: -> 
+          @_keyValueSize = @keySize + @valueSize if @_keyValueSize is null || @isChanged
+          @_keyValueSize
 
     ### Static properties and methods ###
     @keyFrag = keyFrag
@@ -170,3 +210,5 @@ module.exports = (options) ->
       @find(query, options)
 
     @find = require('./finder')
+
+    @index = index

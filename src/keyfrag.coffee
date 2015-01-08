@@ -7,11 +7,28 @@ fdb = FDBoost.fdb
 db = FDBoost.db
 directories = {}
 
-module.exports = class PrimaryKey
+getDirectory = (dirPath, fnName, callback) ->
+	directory = directories[dirPath]
+
+	if (directory)
+		callback(null, directory)
+	else
+		cb = (err, dir) ->
+			if (err)
+				callback(err)
+			else
+				directories[dirPath] = dir
+				callback(null, dir)
+
+		fdb.directory[fnName](db, dirPath.split('/'), {}, cb)
+
+	return
+
+module.exports = class KeyFrag
 	constructor: (@database, @dataset, options) ->
 		if (options)
 			for prop, val of options
-				PrimaryKey::[prop] = val if typeof val is 'function'
+				KeyFrag::[prop] = val if typeof val is 'function'
 
 	_fields: null
 	
@@ -26,56 +43,56 @@ module.exports = class PrimaryKey
 
 	generateId: (record) -> 
 		new Buffer(new ObjectID().toHexString(), 'hex')
-		
+
 	deserializeId: (buffer) ->
 		buffer.toString('hex')
 
 	getRootPath: -> 
 		path.join('acidrecord', @database, @dataset)
 
+	getDirectoryPath: (obj) ->
+		dirPath = @getRootPath()
+		dirPath = dirPath.substr(1) if dirPath.indexOf('/') is 0
+		dirPath += "/#{obj[field]}" for field in @directoryFields
+		dirPath
+
 	resolveDirectory: (obj, callback) ->
-    directoryPath = @getRootPath()
-    directoryPath = directoryPath.substr(1) if directoryPath.indexOf('/') is 0
-    directoryPath += "/#{obj[field]}" for field in @directoryFields
+		getDirectory(@getDirectoryPath(obj), 'open', callback)
+		return
+
+	resolveOrCreateDirectory: (obj, callback) ->
+		getDirectory(@getDirectoryPath(obj), 'createOrOpen', callback)
+		return
+
+	resolveKey: (obj) ->
+		key = []
+		idName = @getIdName()
+
+		for field in @keyFields
+			val = obj[field]
+			val = FDBoost.encoding.encode(val) unless field is idName
+			key.push(val)
+
+		key
+
+	encodeKey: (directory, obj, keySuffix) ->  
+		keyArr = @resolveKey(obj)
+		keyArr = keyArr.concat(keySuffix) if keySuffix
+
+		### Store key internally in record if obj is an ActiveRecord instance ###
+		obj.key = keyArr if obj.__proto__.hasOwnProperty('key')
+
+		directory.pack(keyArr)
     
-    directory = directories[directoryPath]
+	decodeKey: (directory, buffer, obj = {}) ->
+		keyArr = directory.unpack(buffer)
 
-    if (directory)
-      callback(directory)
-    else
-      cb = (err, dir) ->
-        directories[directoryPath] = dir
-        callback(dir)
-        
-      fdb.directory.createOrOpen(db, directoryPath.split('/'), {}, cb)
-    
-    return
+		for i in [0...@keyFields.length]
+			val = keyArr[i]
+			val = FDBoost.encoding.decode(val) unless i is @keyFields.length - 1
+			obj[@keyFields[i]] = val
 
-  resolveKey: (obj) ->
-    key = []
-    idName = @getIdName()
-
-    for field in @keyFields
-      val = obj[field]
-      val = FDBoost.encoding.encode(val) unless field is idName
-      key.push(val)
-
-    key
-
-  encodeKey: (directory, obj, keySuffix) ->  
-    arr = @resolveKey(obj)
-    arr = arr.concat(keySuffix) if keySuffix
-    directory.pack(arr)
-    
-  decodeKey: (directory, buffer, obj = {}) ->
-    arr = directory.unpack(buffer)
-
-    for i in [0...@keyFields.length]
-      val = arr[i]
-      val = FDBoost.encoding.decode(val) unless i is @keyFields.length - 1
-      obj[@keyFields[i]] = val
-
-    obj
+		obj
 
 	Object.defineProperties @::, 
 		directoryFields: 

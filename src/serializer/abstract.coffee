@@ -11,13 +11,16 @@ module.exports = class AbstractSerializer
 
   serialize: (record, callback) ->
     fdb.future.create (futureCb) =>
-      complete = (directory) =>
-        process.nextTick =>
-          futureCb(@encode(directory, record))
-          return 
+      complete = (err, directory) =>
+        if (err)
+          futureCb(err)
+        else
+          process.nextTick =>
+            futureCb(null, @encode(directory, record))
+            return 
         return   
 
-      @keyFrag.resolveDirectory(record, complete)
+      @keyFrag.resolveOrCreateDirectory(record, complete)
     , callback
 
   encode: (directory, record) ->

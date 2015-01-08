@@ -84,7 +84,7 @@ module.exports = (options) ->
      * @param {object} [record] Record object initializer.
      * @return {Record} a typed ActiveRecord instance.
     ###
-    constructor: (record) ->
+    constructor: (recordOrString) ->
       super()
       
       if (record)
@@ -94,9 +94,6 @@ module.exports = (options) ->
           else
             @[src] = val
 
-      ### generate an Id if record param is undefined or if it does not have a [keyFrag.idName] property value ###
-      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName]
-    
     ### Initializers ###
     database: database
     dataset: dataset
@@ -179,6 +176,9 @@ module.exports = (options) ->
       , callback
 
     serialize: (callback) ->
+      ### generate an Id if none has been set ###
+      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName]
+
       ActiveRecord.serializer.serialize(@, callback)
 
     ### Define getters and setters ###

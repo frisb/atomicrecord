@@ -8,7 +8,7 @@
       "url": "http://frisB.com"
     }
   ],
-  "main": "./src/activerecord",
+  "main": "./src",
   "engines": {
     "node": ">= 0.8.x"
   },

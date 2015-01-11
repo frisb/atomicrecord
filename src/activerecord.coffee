@@ -49,10 +49,10 @@ module.exports = (options) ->
         tr.set(kv[0], kv[1]) for kv in arr
         record.reset(true)
         
-        record.index(tr, callback)
+        # record.index(tr, callback)
         #rec.increment(tr, directory, rec)
         
-        # callback(null)
+        callback(null)
     
     record.serialize(cb)
   

@@ -84,15 +84,20 @@ module.exports = (options) ->
      * @param {object} [record] Record object initializer.
      * @return {Record} a typed ActiveRecord instance.
     ###
-    constructor: (record) ->
+    constructor: (initializer) ->
       super()
       
-      if (record)
-        for src, val of record
-          if (src is keyFrag.idName)
-            @[src] = keyFrag.serializeId(val)
+      if (initializer)
+        switch typeof initializer
+          when 'string', 'number' then @[keyFrag.idName] = keyFrag.serializeId(initializer)
+          when 'object'
+            for src, val of initializer
+              if (src is keyFrag.idName)
+                @[src] = keyFrag.serializeId(val)
+              else
+                @[src] = val
           else
-            @[src] = val
+            throw new Error('Initializer must be a record, string or number')
 
     ### Initializers ###
     database: database

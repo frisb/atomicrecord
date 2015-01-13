@@ -2,6 +2,7 @@ path = require('path')
 
 {ObjectID} = require('bson')
 FDBoost = require('fdboost')()
+ID = require('./id')
 
 fdb = FDBoost.fdb
 db = FDBoost.db
@@ -25,9 +26,9 @@ getDirectory = (dirPath, fnName, callback) ->
 	return
 
 module.exports = class KeyFrag
-	constructor: (@database, @dataset, options) ->
-		if (options)
-			for prop, val of options
+	constructor: (@database, @dataset, overrides) ->
+		if (overrides)
+			for prop, val of overrides
 				KeyFrag::[prop] = val if typeof val is 'function'
 
 	_fields: null
@@ -45,10 +46,10 @@ module.exports = class KeyFrag
 		@serializeId(new ObjectID().toHexString())
 
 	serializeId: (hexStr) ->
-		new Buffer(hexStr, 'hex')
+		new ID(hexStr)
 
-	deserializeId: (buffer) ->
-		buffer.toString('hex')
+	deserializeId: (id) ->
+		id.toString()
 
 	getRootPath: -> 
 		path.join('acidrecord', @database, @dataset)

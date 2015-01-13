@@ -1,22 +1,68 @@
-module.exports = class ActiveList extends Array
-	constructor: (recordsOrSize) ->
-		if (recordsOrSize instanceof Array)
-			@push(record) for record of recordsOrSize
+{EventEmitter} = require('events')	
+
+FDBoost = require('fdboost')()
+fdb = FDBoost.fdb
+db = FDBoost.db
+
+save = (tr, list, callback) ->
+	len = list.length
+	saved = 0
+	
+	cb = (err) ->
+		if (err)
+			callback(err)
 		else
-			super(recordsOrSize)
+			list.emit('recordsaved', record)
+			saved++
+			callback(null) if saved is len
+	
+	record.save(tr, cb) for record in list._records
+	
+	return
 
-	_saveRecord: (tr, index, callback) ->
-		len = @length
-		@[index].save tr, (err) ->
-			if (err)
-				callback(err)
-			else if (index is len - 1)
-				callback(null) 
-			return
-		return
+transactionalSave = fdb.transactional(save)
 
+module.exports = class ActiveList extends EventEmitter
+	constructor: (recordsOrSize) ->
+		super()
+		
+		if (recordsOrSize instanceof Array)
+			@_records = new Array(recordsOrSize.length)
+			@_records[i] = record for record, i in recordsOrSize
+		else if (typeof(recordsOrSize) is 'number')
+			@_records = new Array(recordsOrSize)
+		else 
+			@_records = [] if @_records is null
+
+	_records: null
+	
+	add: (record) ->
+		@_records.push(record)
+	
 	save: (tr, callback) ->
-		@_saveRecord(tr, i, callback) for i in [0...@length]
+		if (typeof(tr) is 'function')
+			callback = tr
+			tr = null
+			
+		fdb.future.create (futureCb) =>
+			len = @length
+			
+			complete = (err) =>
+				if (err)
+					@emit('error', err)
+					futureCb(err)
+				else
+					@emit('saved', len)
+					futureCb(null, len)
+					
+			transactionalSave(tr || db, @, complete)
+			return
+		, callback
+		
 		return
-
-
+		
+	Object.defineProperty @::, 'length',
+		get: ->
+			@_records.length
+		set: (val) ->
+			@_records.length = val

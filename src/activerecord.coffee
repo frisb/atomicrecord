@@ -84,7 +84,7 @@ module.exports = (options) ->
      * @param {object} [record] Record object initializer.
      * @return {Record} a typed ActiveRecord instance.
     ###
-    constructor: (recordOrString) ->
+    constructor: (record) ->
       super()
       
       if (record)
@@ -157,10 +157,7 @@ module.exports = (options) ->
         tr = null
         
       fdb.future.create (futureCb) =>
-        complete = (err) =>
-          futureCb(err, @)
-        
-        transactionalSave(tr || db, @, complete)
+        transactionalSave(tr || db, @, futureCb)
       , callback
 
     index: (tr, callback) ->
@@ -169,10 +166,7 @@ module.exports = (options) ->
         tr = null
         
       fdb.future.create (futureCb) =>
-        complete = (err) =>
-          futureCb(err, @)
-        
-        transactionalIndex(tr || db, @, complete)
+        transactionalIndex(tr || db, @, futureCb)
       , callback
 
     serialize: (callback) ->
@@ -217,3 +211,6 @@ module.exports = (options) ->
     @find = require('./finder')
 
     @index = index
+
+    @extend = (constructor) ->
+      constructor extends @

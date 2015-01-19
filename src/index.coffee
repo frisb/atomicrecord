@@ -1,5 +1,5 @@
-AcidRecord = require('./activerecord')
-AcidRecord.List = require('./activelist')
-AcidRecord.Queue = require('./activequeue')
+AtomicRecord = require('./atomicrecord')
+AtomicRecord.List = require('./atomiclist')
+AtomicRecord.Queue = require('./atomicqueue')
 
-module.exports = AcidRecord
+module.exports = AtomicRecord

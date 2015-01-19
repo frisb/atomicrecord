@@ -1,5 +1,5 @@
 module.exports = (indexName, index) ->
-	class ActiveIndex
+	class AtomicIndex
 		name: indexName
 		tests: []
 		execute: (tr, directory, record) ->

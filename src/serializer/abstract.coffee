@@ -2,8 +2,8 @@ FDBoost = require('fdboost')()
 fdb = FDBoost.fdb
 
 module.exports = class AbstractSerializer
-  constructor: (@ActiveRecord) ->
-    @keyFrag = @ActiveRecord.keyFrag
+  constructor: (@AtomicRecord) ->
+    @keyFrag = @AtomicRecord.keyFrag
 
   state: []
   cursor: null

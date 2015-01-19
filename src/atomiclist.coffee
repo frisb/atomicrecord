@@ -22,7 +22,7 @@ save = (tr, list, callback) ->
 
 transactionalSave = fdb.transactional(save)
 
-module.exports = class ActiveList extends EventEmitter
+module.exports = class AtomicList extends EventEmitter
 	constructor: (recordsOrSize) ->
 		super()
 		

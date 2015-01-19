@@ -1,5 +1,5 @@
 {
-  "name": "acidrecord",
+  "name": "atomicrecord",
   "description": "Super lightweight node.js ActiveRecord ORM layer for FoundationDB",
   "version": "0.1.0",
   "contributors": [
@@ -8,7 +8,7 @@
       "url": "http://frisB.com"
     }
   ],
-  "main": "./src/index",
+  "main": "./lib/index",
   "engines": {
     "node": ">= 0.8.x"
   },
@@ -26,12 +26,9 @@
     "url": "https://github.com/frisb/acidrecord"
   },
   "dependencies": {
-    "async": "^0.9.0",
     "bson": "^0.2.11",
     "fdboost": "*",
-    "formality": "*",
-    "surreal": "^0.1.0",
-    "writeln": "^0.0.2"
+    "pseudonym": "*"
   },
   "keywords": [
     "fdb",

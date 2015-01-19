@@ -1,8 +1,8 @@
-ActiveList = require('./activelist')
+AtomicList = require('./atomiclist')
 FDBoost = require('fdboost')()
 db = FDBoost.db
 
-module.exports = class ActiveQueue extends ActiveList
+module.exports = class AtomicQueue extends AtomicList
 	constructor: (recordsOrSize, options) ->
 		super(recordsOrSize)
 		

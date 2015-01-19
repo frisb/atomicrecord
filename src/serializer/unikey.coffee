@@ -24,7 +24,7 @@ module.exports = class UniKeySerializer extends AbstractSerializer
 
   decode: (directory, keyValuePair) ->
     primaryKey = @keyFrag.decodeKey(directory, keyValuePair.key)
-    record = new @ActiveRecord(primaryKey)
+    record = new @AtomicRecord(primaryKey)
     
     values = fdb.tuple.unpack(keyValuePair.value)
     record.data(field, values[i + 1])  for field, i in values

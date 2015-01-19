@@ -44,12 +44,12 @@ module.exports = class MultiKeySerializer extends AbstractSerializer
           @cursor.reset(true)
           @state.push(record)
 
-          # create new ActiveRecord instance
-          record = new @ActiveRecord(primaryKey)
+          # create new AtomicRecord instance
+          record = new @AtomicRecord(primaryKey)
           break
     else
-      # create new ActiveRecord instance
-      record = new @ActiveRecord(primaryKey)
+      # create new AtomicRecord instance
+      record = new @AtomicRecord(primaryKey)
       
     record.data(dest, keyValuePair.value)
     

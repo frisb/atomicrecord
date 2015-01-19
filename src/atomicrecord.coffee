@@ -4,16 +4,16 @@ AbstractRecord = require('./abstractrecord')
 #_INCREMENTAL.writeUInt32LE(1, 0)
 
 ###*
- * Create an ActiveRecord class 
+ * Create an AtomicRecord class 
  * @method
- * @param {object} options ActiveRecord type specific options.
+ * @param {object} options AtomicRecord type specific options.
  * @param {object} [options.fdb=undefined] fdb API instance.
  * @param {string} options.database Database name.
  * @param {string} options.dataset Data collection name.
- * @param {Boolean} options.partition Flag if ActiveRecord type instance storage is partitioned.
+ * @param {Boolean} options.partition Flag if AtomicRecord type instance storage is partitioned.
  * @param {string[]|object} options.fields AliasMap initializer.
  * @param {object} [options.primaryKey] Override methods for keyfrag Primary Key generator.
- * @return {ActiveRecord} an ActiveRecord class
+ * @return {AtomicRecord} an AtomicRecord class
 ###    
 module.exports = (options) ->
   throw new Error('No AcidRecord options specified.') unless options
@@ -27,7 +27,7 @@ module.exports = (options) ->
   fdb = FDBoost.fdb
   db = FDBoost.db
 
-  ActiveIndex = require('./activeindex')
+  AtomicIndex = require('./atomicindex')
   KeyFrag = require('./keyfrag')
   SerializerFactory = require('./serializer/factory')
 
@@ -37,7 +37,7 @@ module.exports = (options) ->
     names: []
 
   for indexName, index of indexes
-    Index = ActiveIndex(indexName, index)
+    Index = AtomicIndex(indexName, index)
     activeIndexes[indexName] = new Index()
     activeIndexes.names.push(indexName)
 
@@ -77,12 +77,12 @@ module.exports = (options) ->
   transactionalSave = fdb.transactional(save)
   transactionalIndex = fdb.transactional(index)
 
-  class ActiveRecord extends AbstractRecord(keyFrag.idName, fields)
+  class AtomicRecord extends AbstractRecord(keyFrag.idName, fields)
     ###*
-     * Creates a new typed ActiveRecord instance
+     * Creates a new typed AtomicRecord instance
      * @class
      * @param {object} [record] Record object initializer.
-     * @return {Record} a typed ActiveRecord instance.
+     * @return {Record} a typed AtomicRecord instance.
     ###
     constructor: (initializer) ->
       super()
@@ -146,7 +146,7 @@ module.exports = (options) ->
      * The callback format for the save method
      * @callback saveCallback
      * @param {Error} err An error instance representing the error during the execution.
-     * @param {ActiveRecord} record The current ActiveRecord instance if the save method was successful.
+     * @param {AtomicRecord} record The current AtomicRecord instance if the save method was successful.
     ###
 
     ###*
@@ -178,7 +178,7 @@ module.exports = (options) ->
       ### generate an Id if none has been set ###
       @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName]
 
-      ActiveRecord.serializer.serialize(@, callback)
+      AtomicRecord.serializer.serialize(@, callback)
 
     ### Define getters and setters ###
     Object.defineProperties @::,

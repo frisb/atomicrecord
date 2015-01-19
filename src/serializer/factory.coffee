@@ -4,13 +4,13 @@ UniKeySerializer = require('./unikey')
 serializers = {}
 
 module.exports = 
-	create: (ActiveRecord) ->
-		key = "#{ActiveRecord::database}:#{ActiveRecord::dataset}"
+	create: (AtomicRecord) ->
+		key = "#{AtomicRecord::database}:#{AtomicRecord::dataset}"
 		serializer = serializers[key]
 
 		if (!serializer)
 			serializers[key] = serializer = 
-				multi: new MultiKeySerializer(ActiveRecord)
-				uni: new UniKeySerializer(ActiveRecord)
+				multi: new MultiKeySerializer(AtomicRecord)
+				uni: new UniKeySerializer(AtomicRecord)
 
-		if ActiveRecord.partition then serializer.multi else serializer.uni
+		if AtomicRecord.partition then serializer.multi else serializer.uni

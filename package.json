@@ -18,12 +18,12 @@
     "grunt-contrib-coffee": "^0.10.1"
   },
   "bugs": {
-    "url": "https://github.com/frisb/acidrecord/issues"
+    "url": "https://github.com/frisb/atomicrecord/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/frisb/acidrecord"
+    "url": "https://github.com/frisb/atomicrecord"
   },
   "dependencies": {
     "bson": "^0.2.11",

@@ -245,8 +245,11 @@ finder.execute('array');
 
 ## Roadmap
 More comments and elaborate on README
+
 Finalize Indexing
+
 Polish the Finder class and iteratorTypes
+
 Relational data
 
 

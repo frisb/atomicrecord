@@ -38,6 +38,7 @@ var Person = AtomicRecord({
     timestamp: 't'
   }
 });
+```
 
 #### Transactional Save
 ``` js
@@ -231,14 +232,18 @@ finder.on('end', function () {
 finder.execute('array');
 ```
 
+## Roadmap
+More comments and elaborate on README
+Finalize Indexing
+Polish the Finder class and iteratorTypes
+Relational data
+
 ## Installation
 ```
+cd node_modules
 git clone git@github.com:frisb/atomicrecord.git
 cd atomicrecord
 npm install
-<!---
-npm install atomicrecord
--->
 ```
 
 ## License

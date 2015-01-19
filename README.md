@@ -1,6 +1,4 @@
-# AtomicRecord [![Build Status](https://travis-ci.org/frisb/atomicrecord.png)](http://travis-ci.org/frisb/atomicrecord)
-
-[![npm status badge](https://nodei.co/npm/atomicrecord.png?stars=true&downloads=true)](https://nodei.co/npm/atomicrecord/)
+# AtomicRecord 
 
 AtomicRecord is a super lightweight node.js ActiveRecord ORM layer for FoundationDB.
 

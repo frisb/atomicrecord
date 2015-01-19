@@ -254,7 +254,10 @@ Relational data
 
 ## Installation
 ```
-npm install atomicrecord
+cd node_modules
+git clone git@github.com:frisb/atomicrecord.git
+cd atomicrecord
+npm install
 ```
 
 ## License

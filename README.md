@@ -1,4 +1,6 @@
-# AtomicRecord
+# AtomicRecord [![Build Status](https://travis-ci.org/frisb/atomicrecord.png)](http://travis-ci.org/frisb/atomicrecord)
+
+[![npm status badge](https://nodei.co/npm/atomicrecord.png?stars=true&downloads=true)](https://nodei.co/npm/atomicrecord/)
 
 AtomicRecord is a super lightweight node.js ActiveRecord ORM layer for FoundationDB.
 
@@ -40,12 +42,12 @@ var Person = AtomicRecord({
 
 #### Transactional Save
 ``` js
-function complete(err) {
+function complete(err, person) {
 	if (err) {
 		console.error(err);
 	}
 	else {
-		console.log('transaction complete: person saved')
+		console.log('transaction complete: person saved', person);
 	}
 }
 
@@ -80,19 +82,25 @@ person.region = 'USA';
 person.contacts = ['+1-212-555-1234', '+1-917-555-6789'];
 person.timestamp = new Date();
 
-person.save();
+person.save(function (err, p) {
+  if (err) {
+    console.error(err);
+  }
+  else {
+    console.log('person saved', p);
+  }
+});
 ```
 
 #### Transactional AtomicQueue Batch Save
 ``` js
-
-function complete(err, count) {
-	if (err) {
-		console.error(err);
-	}
-	else {
-		console.log('transaction complete: %s people saved', count)
-	}
+function complete(err) {
+  if (err) {
+    console.error(err);
+  }
+  else {
+    console.log('transaction complete');
+  }
 }
 
 function transaction(tr, callback) {
@@ -162,8 +170,9 @@ queue.on('recordsaved', function (record) {
 	console.log('record', record);
 });
 
+// continuously push records into the queue for processing
 for (var i = 0; i < 10000; i++) {
-	queue.add(people[i]);
+	queue.add(people[i]); // people is a pseudo-array
 }
 ```
 
@@ -183,8 +192,11 @@ function transaction(tr, callback) {
   
   finder.on('data', function (data) {
     for (var i = 0; i < data.length; i++) {
-      var item = data[i];
-      console.log('data', { keySize: item.keySize, valueSize: item.valueSize }, item);
+      var record = data[i];
+      console.log('keySize', record.keySize);
+      console.log('valueSize', record.valueSize);
+      console.log('record', record);
+      console.log()
     }
   });
     
@@ -213,9 +225,12 @@ var finder = Person.find({ region: 'USA' });
 
 finder.on('data', function (data) {
   for (var i = 0; i < data.length; i++) {
-    var item = data[i];
-    console.log('data', { keySize: item.keySize, valueSize: item.valueSize }, item);
-  }
+      var record = data[i];
+      console.log('keySize', record.keySize);
+      console.log('valueSize', record.valueSize);
+      console.log('record', record);
+      console.log()
+    }
 });
   
 finder.on('error', function (err) {
@@ -239,10 +254,7 @@ Relational data
 
 ## Installation
 ```
-cd node_modules
-git clone git@github.com:frisb/atomicrecord.git
-cd atomicrecord
-npm install
+npm install atomicrecord
 ```
 
 ## License

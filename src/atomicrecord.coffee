@@ -52,7 +52,7 @@ module.exports = (options) ->
         # record.index(tr, callback)
         #rec.increment(tr, directory, rec)
         
-        callback(null)
+        callback(null, record)
     
     record.serialize(cb)
   

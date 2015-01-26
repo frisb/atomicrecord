@@ -1,6 +1,5 @@
 AbstractSerializer = require('./abstract')
-FDBoost = require('fdboost')()
-fdb = FDBoost.fdb
+fdb = require('fdboost')()
 
 module.exports = class UniKeySerializer extends AbstractSerializer
   encode: (directory, record) ->
@@ -11,7 +10,7 @@ module.exports = class UniKeySerializer extends AbstractSerializer
 
       if (!@keyFrag.fields[srcKey])
         val = record[srcKey]
-        valArr.push(destKey, FDBoost.encoding.encode(val)) if typeof val isnt 'undefined'
+        valArr.push(destKey, fdb.encoding.encode(val)) if typeof val isnt 'undefined'
 
     encodedKey = @keyFrag.encodeKey(directory, record)
     encodedValue = fdb.tuple.pack(valArr)

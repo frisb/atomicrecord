@@ -1,6 +1,5 @@
 AbstractSerializer = require('./abstract')
-FDBoost = require('fdboost')()
-fdb = FDBoost.fdb
+fdb = require('fdboost')()
 
 areEqual = (recordVal, keyVal) ->
   return false if recordVal.length isnt keyVal.length
@@ -25,7 +24,7 @@ module.exports = class MultiKeySerializer extends AbstractSerializer
           keySuffix = [destKey]
 
           encodedKey = @keyFrag.encodeKey(directory, record, keySuffix)
-          encodedValue = FDBoost.encoding.encode(val)
+          encodedValue = fdb.encoding.encode(val)
           
           keyValues.push([encodedKey, encodedValue])
 

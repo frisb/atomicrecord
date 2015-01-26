@@ -1,5 +1,4 @@
-FDBoost = require('fdboost')()
-fdb = FDBoost.fdb
+fdb = require('fdboost')()
 
 module.exports = class AbstractSerializer
   constructor: (@AtomicRecord) ->

@@ -23,9 +23,8 @@ module.exports = (options) ->
   throw new Error('Database name not specified.') unless database
   throw new Error('Dataset name not specified.') unless dataset
   
-  FDBoost = require('fdboost')(fdb)
-  fdb = FDBoost.fdb
-  db = FDBoost.db
+  fdb = require('fdboost')(fdb)
+  db = fdb.open()
 
   AtomicIndex = require('./atomicindex')
   KeyFrag = require('./keyfrag')
@@ -42,8 +41,6 @@ module.exports = (options) ->
     activeIndexes.names.push(indexName)
 
   save = (tr, record, callback) ->
-    console.log('saving', record)
-
     cb = (err, arr) ->
       if (err)
         callback(err)
@@ -133,7 +130,7 @@ module.exports = (options) ->
         
         ### Decode the value if the dest param is not equal to keyFrag.idName and the type of val is Buffer ###
         if (dest isnt keyFrag.idName && val instanceof Buffer)
-          val = FDBoost.encoding.decode(val)
+          val = fdb.encoding.decode(val)
           @data(dest, val)
           
         return val

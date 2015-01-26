@@ -1,6 +1,6 @@
 AtomicList = require('./atomiclist')
-FDBoost = require('fdboost')()
-db = FDBoost.db
+fdb = require('fdboost')()
+db = fdb.open()
 
 module.exports = class AtomicQueue extends AtomicList
 	constructor: (recordsOrSize, options) ->

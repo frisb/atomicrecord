@@ -1,11 +1,10 @@
 path = require('path')
 
 {ObjectID} = require('bson')
-FDBoost = require('fdboost')()
+fdb = require('fdboost')()
+db = fdb.open()
 ID = require('./id')
 
-fdb = FDBoost.fdb
-db = FDBoost.db
 directories = {}
 
 getDirectory = (dirPath, fnName, callback) ->
@@ -74,7 +73,7 @@ module.exports = class KeyFrag
 
 		for field in @keyFields
 			val = obj[field]
-			val = FDBoost.encoding.encode(val) unless field is idName
+			val = fdb.encoding.encode(val) unless field is idName
 			key.push(val)
 
 		key
@@ -95,7 +94,7 @@ module.exports = class KeyFrag
 
 		for i in [0...@keyFields.length]
 			val = keyArr[i]
-			val = FDBoost.encoding.decode(val) unless i is @keyFields.length - 1
+			val = fdb.encoding.decode(val) unless i is @keyFields.length - 1
 			obj[@keyFields[i]] = val
 
 		# obj

@@ -1,8 +1,7 @@
 {EventEmitter} = require('events')	
 
-FDBoost = require('fdboost')()
-fdb = FDBoost.fdb
-db = FDBoost.db
+fdb = require('fdboost')()
+db = fdb.open()
 
 save = (tr, list, callback) ->
 	len = list.length

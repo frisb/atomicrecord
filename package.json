@@ -8,7 +8,7 @@
       "url": "http://frisB.com"
     }
   ],
-  "main": "./lib/index",
+  "main": "src/index",
   "engines": {
     "node": ">= 0.8.x"
   },
@@ -28,7 +28,7 @@
   "dependencies": {
     "bson": "^0.2.16",
     "fdboost": "^0.0.11",
-    "pseudonym": "^0.1.4",
+    "pseudonym": "^0.1.5",
     "wingman": "^0.0.2"
   },
   "keywords": [

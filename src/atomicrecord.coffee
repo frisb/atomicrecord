@@ -42,6 +42,8 @@ module.exports = (options) ->
     activeIndexes.names.push(indexName)
 
   save = (tr, record, callback) ->
+    console.log('saving', record)
+
     cb = (err, arr) ->
       if (err)
         callback(err)
@@ -211,7 +213,7 @@ module.exports = (options) ->
         get: ->
           # @_key = keyFrag.resolveKey(@) if @_key is null || @isChanged
           # @_key
-          
+
           throw new Error('Record must be loaded or saved to generate key') if @_key is null
           @_key
 

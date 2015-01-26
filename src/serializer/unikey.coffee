@@ -10,8 +10,7 @@ module.exports = class UniKeySerializer extends AbstractSerializer
       srcKey = record.aliasMap.srcKeys[i]
 
       if (!@keyFrag.fields[srcKey])
-        val = record.__d[i]
-
+        val = record[srcKey]
         valArr.push(destKey, FDBoost.encoding.encode(val)) if typeof val isnt 'undefined'
 
     encodedKey = @keyFrag.encodeKey(directory, record)

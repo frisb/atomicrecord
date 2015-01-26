@@ -11,11 +11,13 @@ module.exports = class UniKeySerializer extends AbstractSerializer
 
       if (!@keyFrag.fields[srcKey])
         val = record.__d[i]
+
         valArr.push(destKey, FDBoost.encoding.encode(val)) if typeof val isnt 'undefined'
 
     encodedKey = @keyFrag.encodeKey(directory, record)
     encodedValue = fdb.tuple.pack(valArr)
     
+    record.key = encodedKey
     record.keySize = encodedKey.length
     record.valueSize = encodedValue.length
     # partition ?= record.keySize > 100 || record.valueSize > 1024
@@ -23,13 +25,19 @@ module.exports = class UniKeySerializer extends AbstractSerializer
     [[encodedKey, encodedValue]]
 
   decode: (directory, keyValuePair) ->
-    primaryKey = @keyFrag.decodeKey(directory, keyValuePair.key)
-    record = new @AtomicRecord(primaryKey)
-    
-    values = fdb.tuple.unpack(keyValuePair.value)
-    record.data(field, values[i + 1])  for field, i in values
+    record = new @AtomicRecord()
+    record.key = keyValuePair.key
+    record.keySize = keyValuePair.key.length
+    record.valueSize = keyValuePair.value.length
+
+    @keyFrag.decodeDirectory(directory, record)
+    @keyFrag.decodeKey(directory, keyValuePair.key, record)
+
+    valueItems = fdb.tuple.unpack(keyValuePair.value)
+
+    record.data(field, valueItems[i + 1]) for field, i in valueItems
     record.reset(true)
-    
+
     @state.push(record)
 
     record

@@ -9,7 +9,7 @@ module.exports = (grunt) ->
     coffee:
       compile:
         options:
-          bare: false
+          bare: true
           join: false
         files: [
           expand: true
@@ -19,6 +19,22 @@ module.exports = (grunt) ->
           ext: '.js'
         ]
 
+    codo:
+      dist:
+        src: 'src/**/*.coffee'
+        dest: 'docs'
+        options:
+          name: 'AtomicRecord'
+          closure: true
+          analytics: 'UA-40562957-12'
+          undocumented: false
+          private: false
+          stats: true
+          extra: [ 'LICENSE' ]
+          # theme: 'yaml'
+          verbose: true
+
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-contrib-coffee')
-  grunt.registerTask('default', ['clean', 'coffee'])
+  # grunt.loadNpmTasks('grunt-codo')
+  grunt.registerTask('default', ['clean', 'coffee',]) # 'codo'])

@@ -55,6 +55,14 @@ module.exports = (options) ->
         callback(null, record)
     
     record.serialize(cb)
+
+  remove = (tr, record, callback) ->
+    tr.clear(record.key)
+
+    ### todo: delete indexes keys ###
+
+    ### callback since if db.clear returns future ###
+    callback(null)
   
   index = (tr, record, callback) ->
     cb = (err, directory) ->
@@ -75,6 +83,7 @@ module.exports = (options) ->
         #tr.add(packedKey, _INCREMENTAL)
           
   transactionalSave = fdb.transactional(save)
+  transactionalRemove = fdb.transactional(remove)
   transactionalIndex = fdb.transactional(index)
 
   class AtomicRecord extends AbstractRecord(keyFrag.idName, fields)
@@ -150,7 +159,7 @@ module.exports = (options) ->
     ###
 
     ###*
-     * Persists all property changes to the database
+     * Persists record to the database
      * @method
      * @param {object} [tr=null] Transaction.
      * @param {saveCallback} callback Calback.
@@ -163,6 +172,22 @@ module.exports = (options) ->
         
       fdb.future.create (futureCb) =>
         transactionalSave(tr || db, @, futureCb)
+      , callback
+
+    ###*
+     * Deletes record from the database
+     * @method
+     * @param {object} [tr=null] Transaction.
+     * @param {saveCallback} callback Calback.
+     * @return {Future}
+    ###
+    remove: (tr, callback) ->
+      if (typeof(tr) is 'function')
+        callback = tr
+        tr = null
+        
+      fdb.future.create (futureCb) =>
+        transactionalRemove(tr || db, @, futureCb)
       , callback
 
     index: (tr, callback) ->
@@ -184,8 +209,12 @@ module.exports = (options) ->
     Object.defineProperties @::,
       key: 
         get: ->
-          @_key = keyFrag.resolveKey(@) if @_key is null || @isChanged
+          # @_key = keyFrag.resolveKey(@) if @_key is null || @isChanged
+          # @_key
+          
+          throw new Error('Record must be loaded or saved to generate key') if @_key is null
           @_key
+
         set: (val) ->
           @_key = val
 
@@ -198,11 +227,14 @@ module.exports = (options) ->
     @keyFrag = keyFrag
     @serializer = SerializerFactory.create(@)
 
-    @transactional = (func) -> 
-      fdb.transactional(func)
+    @fdb = fdb
+    @db = db
 
-    @doTransaction = (transaction, callback) -> 
-      db.doTransaction(transaction, callback)
+    # @transactional = (func) -> 
+    #   fdb.transactional(func)
+
+    # @doTransaction = (transaction, callback) -> 
+    #   db.doTransaction(transaction, callback)
 
     @count = ->
       throw new Error('not implemented')

@@ -39,7 +39,7 @@ module.exports = class KeyFrag
 	getKeyFields: -> 
 		['id']
 
-	getIdName: -> 
+	getIdName: ->
 		'id'
 
 	generateId: -> 
@@ -88,7 +88,9 @@ module.exports = class KeyFrag
 
 		directory.pack(keyArr)
     
-	decodeKey: (directory, buffer, obj = {}) ->
+
+  # rethink this
+	decodeKey: (directory, buffer, obj) -> # obj = {}) ->
 		keyArr = directory.unpack(buffer)
 
 		for i in [0...@keyFields.length]
@@ -96,7 +98,13 @@ module.exports = class KeyFrag
 			val = FDBoost.encoding.decode(val) unless i is @keyFields.length - 1
 			obj[@keyFields[i]] = val
 
-		obj
+		# obj
+		return
+
+	decodeDirectory: (directory, obj) ->
+		start = directory._path.length - @directoryFields.length
+		obj[@directoryFields[i - start]] = directory._path[i] for i in [start...directory._path.length]
+		return
 
 	Object.defineProperties @::, 
 		directoryFields: 

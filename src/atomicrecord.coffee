@@ -229,11 +229,11 @@ module.exports = (options) ->
     @fdb = fdb
     @db = db
 
-    # @transactional = (func) -> 
-    #   fdb.transactional(func)
+    @transactional = (func) -> 
+      fdb.transactional(func)
 
-    # @doTransaction = (transaction, callback) -> 
-    #   db.doTransaction(transaction, callback)
+    @doTransaction = (transaction, callback) -> 
+      db.doTransaction(transaction, callback)
 
     @count = ->
       throw new Error('not implemented')

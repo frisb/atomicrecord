@@ -16,7 +16,7 @@ AbstractRecord = require('./abstractrecord')
  * @return {AtomicRecord} an AtomicRecord class
 ###    
 module.exports = (options) ->
-  throw new Error('No AcidRecord options specified.') unless options
+  throw new Error('No AtomicRecord options specified.') unless options
   
   {fdb, database, dataset, partition, fields, primaryKey, indexes} = options
 

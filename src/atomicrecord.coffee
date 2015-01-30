@@ -85,7 +85,7 @@ module.exports = (options) ->
   transactionalRemove = fdb.transactional(remove)
   transactionalIndex = fdb.transactional(index)
 
-  class AtomicRecord extends AbstractRecord(keyFrag.idName, fields)
+  class AtomicRecord extends AbstractRecord(fields)
     ###*
      * Creates a new typed AtomicRecord instance
      * @class
@@ -200,7 +200,7 @@ module.exports = (options) ->
 
     serialize: (callback) ->
       ### generate an Id if none has been set ###
-      @[keyFrag.idName] = keyFrag.generateId() if !@[keyFrag.idName]
+      @[keyFrag.idName] = keyFrag.generateId() if @aliasMap[keyFrag.idName] && !@[keyFrag.idName]
 
       AtomicRecord.serializer.serialize(@, callback)
 
@@ -245,6 +245,34 @@ module.exports = (options) ->
       @find(query, options)
 
     @find = require('./finder')
+
+    @findOne = (tr, query, callback) ->
+      if (typeof(query) is 'function')
+        callback = query
+        query = tr
+        tr = null
+      else if (!query)
+        query = tr
+        tr = null
+
+      fdb.future.create (futureCb) =>
+        record = null
+        finder = @find(query, { limit: 1 })
+
+        finder.on 'data', (data) ->
+          record = data[0]
+          return
+
+        finder.on 'error', (err) ->
+          futureCb(err)
+          return
+
+        finder.on 'end', ->
+          futureCb(null, record)
+          return
+
+        finder.execute(tr, 'array')
+      , callback
 
     @index = index
 

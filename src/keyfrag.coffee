@@ -15,6 +15,7 @@ getDirectory = (dirPath, fnName, callback) ->
 	else
 		cb = (err, dir) ->
 			if (err)
+				err.message = "Directory path \"#{dirPath}\" does not exist." if err.message is 'The directory does not exist.'
 				callback(err)
 			else
 				directories[dirPath] = dir
@@ -51,7 +52,7 @@ module.exports = class KeyFrag
 		id.toString()
 
 	getRootPath: -> 
-		path.join('acidrecord', @database, @dataset)
+		path.join('atomicrecord', @database, @dataset)
 
 	getDirectoryPath: (obj) ->
 		dirPath = @getRootPath()

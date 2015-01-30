@@ -81,10 +81,11 @@ module.exports = (query, options = {}) ->
     ###        
     execute: (tr, iteratorType) ->
       callback = (err, @directory) =>
-        throw new Error(err) if err
-        
-        @begin = @directory
-        super(tr, iteratorType)
+        if (err)
+          @emit('error', err)
+        else
+          @begin = @directory
+          super(tr, iteratorType)
 
       keyFrag.resolveDirectory(query, callback)
       

@@ -7,12 +7,11 @@ Pseudonym = require('pseudonym')
  * @param {string[]|object} fields AliasMap initializer.
  * @return {AbstractRecord} an AbstractRecord class
 ###    
-module.exports = (idName, fields) ->
+module.exports = (fields) ->
   if (fields instanceof Array)
-    aliases = [idName].concat(fields)
+    aliases = fields
   else
     aliases = Object.create(null)
-    aliases[idName] = idName
     aliases[src] = dest for src, dest of fields
   
   class AbstractRecord extends Pseudonym(aliases)

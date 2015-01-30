@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "bson": "^0.2.16",
-    "fdboost": "^0.1.0",
+    "fdboost": "^0.1.4",
     "pseudonym": "^0.1.5"
   },
   "keywords": [

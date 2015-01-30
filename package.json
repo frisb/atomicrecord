@@ -1,7 +1,7 @@
 {
   "name": "atomicrecord",
   "description": "Super lightweight node.js ActiveRecord ORM layer for FoundationDB",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "contributors": [
     {
       "name": "Ashley Brener",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "bson": "^0.2.16",
-    "fdboost": "^0.1.5",
+    "fdboost": "^0.1.6",
     "pseudonym": "^0.1.5"
   },
   "keywords": [

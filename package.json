@@ -1,14 +1,14 @@
 {
   "name": "atomicrecord",
   "description": "Super lightweight node.js ActiveRecord ORM layer for FoundationDB",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "contributors": [
     {
       "name": "Ashley Brener",
       "url": "http://frisB.com"
     }
   ],
-  "main": "src/",
+  "main": "lib/",
   "engines": {
     "node": ">= 0.8.x"
   },
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "bson": "^0.2.16",
-    "fdboost": "^0.1.4",
+    "fdboost": "^0.1.5",
     "pseudonym": "^0.1.5"
   },
   "keywords": [

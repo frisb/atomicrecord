@@ -28,7 +28,7 @@
   "dependencies": {
     "bson": "^0.2.16",
     "fdboost": "^0.1.6",
-    "pseudonym": "^0.1.5"
+    "pseudonym": "^0.1.6"
   },
   "keywords": [
     "fdb",

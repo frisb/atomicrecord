@@ -27,10 +27,9 @@ module.exports = (options) ->
   db = fdb.open()
 
   AtomicIndex = require('./atomicindex')
-  KeyFrag = require('./keyfrag')
   SerializerFactory = require('./serializer/factory')
 
-  keyFrag = new KeyFrag(database, dataset, primaryKey)
+  keyFrag = require('./keyfrag')(database, dataset, primaryKey)
 
   activeIndexes = 
     names: []
@@ -200,7 +199,10 @@ module.exports = (options) ->
 
     serialize: (callback) ->
       ### generate an Id if none has been set ###
-      @[keyFrag.idName] = keyFrag.generateId() if @aliasMap[keyFrag.idName] && !@[keyFrag.idName]
+      recordHasId = typeof @[keyFrag.idName] isnt 'undefined'
+      aliasMapHasId = typeof @aliasMap.srcIndex[keyFrag.idName] isnt 'undefined'
+
+      @[keyFrag.idName] = keyFrag.generateId() if !recordHasId && aliasMapHasId
 
       AtomicRecord.serializer.serialize(@, callback)
 
@@ -277,4 +279,8 @@ module.exports = (options) ->
     @index = index
 
     @extend = (constructor) ->
+      ctorProto = constructor::
       constructor extends @
+      constructor::[k] = v for k, v of ctorProto
+      AtomicRecord.serializer.AtomicRecord = constructor
+      constructor

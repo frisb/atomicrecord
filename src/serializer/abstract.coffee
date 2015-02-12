@@ -3,10 +3,12 @@ fdb = require('fdboost')()
 module.exports = class AbstractSerializer
   constructor: (@AtomicRecord) ->
     @keyFrag = @AtomicRecord.keyFrag
-
-  state: []
-  cursor: null
-  key: null
+    @state = []
+    @cursor = null
+    @key = null
+  # state: []
+  # cursor: null
+  # key: null
 
   serialize: (record, callback) ->
     complete = (err, directory) =>

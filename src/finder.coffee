@@ -3,11 +3,12 @@ fdb = require('fdboost')()
 module.exports = (query, options = {}) ->
   keyFrag = @keyFrag
   serializer = @serializer
-  
+
   class Finder extends fdb.RangeReader
     finalize: (err, callback) ->
       if (serializer.state.length > 0)
         @emit('data', serializer.state)
+        # serializer.state = []
       else if (serializer.cursor isnt null)
         serializer.cursor.reset(true)
         @emit('data', serializer.cursor)

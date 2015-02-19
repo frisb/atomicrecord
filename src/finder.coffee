@@ -85,9 +85,9 @@ module.exports = (query, options = {}) ->
         if (err)
           @emit('error', err)
         else
-          @begin = @directory
+          @begin = @directory.pack(keyFrag.resolveKey(query))
           super(tr, iteratorType)
-
+            
       keyFrag.resolveDirectory(query, callback)
       
   new Finder(options)

@@ -12,12 +12,13 @@ module.exports = (database, dataset, overrides) ->
 	getDirectory = (dirPath, fnName, callback) ->
 		directory = directories[dirPath]
 
+
 		if (directory)
 			callback(null, directory)
 		else
 			cb = (err, dir) ->
 				if (err)
-					err.message = "Directory path \"#{dirPath}\" does not exist." if err.message is 'The directory does not exist.'
+					err = "Directory path \"#{dirPath}\" does not exist." if err.message is 'The directory does not exist.'
 					callback(err)
 				else
 					directories[dirPath] = dir

@@ -35,9 +35,9 @@ module.exports = class AbstractSerializer
         @cursor.keySize += kv.key.length
         @cursor.valueSize += kv.value.length
 
-      if (@state.length > 0)
-        callback(@state)
-        @state = []
+      # if (@state.length > 0)
+      callback(@state)
+      @state = []
           
   decode: (directory, buffer) ->
     throw new Error('not implemented')

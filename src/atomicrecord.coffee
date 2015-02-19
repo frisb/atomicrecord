@@ -136,6 +136,17 @@ module.exports = (options) ->
         
       return super(dest, val)
 
+    getKey: (callback) ->
+      if (@key isnt null)
+        callback(null, key)
+      else
+        keyFrag.resolveDirectory @, (err, directory) =>
+          if (err)
+            callback(err)
+          else 
+            @key = keyFrag.encodeKey(directory, @)
+            callback(null, @key)
+
     # ###*
     #  * Get value for property name.
     #  * @virtual
@@ -183,7 +194,7 @@ module.exports = (options) ->
       if (typeof(tr) is 'function')
         callback = tr
         tr = null
-        
+
       fdb.future.create (futureCb) =>
         transactionalRemove(tr || db, @, futureCb)
       , callback
@@ -213,7 +224,7 @@ module.exports = (options) ->
           # @_key = keyFrag.resolveKey(@) if @_key is null || @isChanged
           # @_key
 
-          throw new Error('Record must be loaded or saved to generate key') if @_key is null
+          # throw new Error('Record must be loaded or saved to generate key') if @_key is null
           @_key
 
         set: (val) ->

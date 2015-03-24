@@ -288,57 +288,15 @@ module.exports = (options) ->
         finder.execute(tr, 'array')
       , callback
 
+    @remove = require('./remover')
+
     @index = index
 
     @extend = (child) ->
-      extension = child
       childProto = {}
-
-      # console.log(require('util').inspect(child::, { showHidden: true, depth: null }))
-
-      # console.log('extproto0', child::)
-
       childProto[propName] = child::[propName] for propName in Object.getOwnPropertyNames(child::)
       
-      extension extends AtomicRecord
-      extension::[k] = v for k, v of childProto
-      AtomicRecord.serializer.AtomicRecord = extension
-      console.log('extension', new extension().serialize)
-      extension
-
-      # ctorProto = child::
-      # child extends @
-      # child::[k] = v for k, v of ctorProto
-      # AtomicRecord.serializer.AtomicRecord = child
-      # child
-
-      # childProto = {}
-
-      # # console.log(require('util').inspect(child::, { showHidden: true, depth: null }))
-
-      # # console.log('extproto0', child::)
-
-      # childProto[propName] = child::[propName] for propName in Object.getOwnPropertyNames(child::)
-
-      # hasProp = {}.hasOwnProperty
-      # parent = AtomicRecord
-
-      # for k, v of parent 
-      #   child[k] = v if hasProp.call(parent, k)
-
-      # ctor = -> 
-      #   @constructor = child
-
-      # ctor:: = parent::
-      # child:: = new ctor() 
-      # child::[k] = v for k, v of childProto
-      # child.__super__ = parent::
-
-      # # console.log('extproto1', extproto)
-
-      # # for k, v of extproto
-      # #   console.log('child function', k)
-
-
-      # AtomicRecord.serializer.AtomicRecord = child
-      # child
+      child extends AtomicRecord
+      child::[k] = v for k, v of childProto
+      AtomicRecord.serializer.AtomicRecord = child
+      child
